@@ -10,6 +10,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -107,7 +108,9 @@ double update_matrix() {
 	// finish we will switch the pointers between g_workspace_matrix and g_matrix (this way we replace all the values at the same time).
 	// We assume both matrices are already allocated when we start, and we don't care about the values in g_workspace_matrix at all.
 	// We return the time in miliseconds it takes to run the calculation
-	clock_t start_time = clock();
+	struct timeval start_time = {0};
+	struct timeval end_time = {0};
+	int start_result = gettimeofday(&start_time, NULL);
 
 	for (int i = 0; i < g_matrix_size; i++) {
 		for (int j = 0; j < g_matrix_size; j++) {
@@ -119,11 +122,11 @@ double update_matrix() {
 	g_matrix = g_workspace_matrix;
 	g_workspace_matrix = temp_holder;
 
-	clock_t end_time = clock();
+	int end_result = gettimeofday(&end_time, NULL);
 
-	// We test the return values of the clock function only here so that we won't affect the running time for the part we want to test
-	ASSERT(-1 != start_time && -1 != end_time, "Failed to measure the time\n");
-	double time_in_milliseconds = (end_time - start_time) / (CLOCKS_PER_SEC / 1000);
+	// We test the return values of the gettimeofday function only here so that we won't affect the running time for the part we want to test
+	ASSERT(0 == start_result && 0 == end_result, "Failed to measure the time\n");
+	double time_in_milliseconds = ((end_time.tv_sec - start_time.tv_sec) * 1000) + ((end_time.tv_usec - start_time.tv_usec) / 1000);
 	return time_in_milliseconds;
 }
 
